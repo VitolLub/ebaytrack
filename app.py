@@ -1,16 +1,11 @@
 from flask import Flask, request,render_template,Response,jsonify
-from flask_pymongo import PyMongo
-#from flask_mongoengine import MongoEngine
 from pymongo import MongoClient
 from ebaysdk.finding import Connection as finding
-from datetime import date
 import datetime
-import requests
 from bs4 import BeautifulSoup
 import datefinder
 from dateutil.parser import *
 import requests
-import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import random
 
