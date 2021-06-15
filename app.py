@@ -8,6 +8,8 @@ from dateutil.parser import *
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import random
+import lxml.html
+from datetime import *
 
 app = Flask(__name__)
 db = MongoClient('mongodb+srv://vitol:vitol486070920@ebay.elcsu.mongodb.net/test?retryWrites=true&w=majority')
@@ -28,11 +30,20 @@ class Logic:
         self.db = db
     def update_save_seller_datedate(self,date):
         print(date)
+    def save_rest_of_data(self):
+        pass
+    def get_proxy(self):
+        collection = db['proxy']
+        res = collection.find({})
+        proxy_arr = []
+        for a in res:
+            proxy_arr.append(a.get('proxy'))
+        return proxy_arr
     def save_seller_date(self,seller_name):
         collection = db['users']
-        now = datetime.datetime.today()
+        now = datetime.today()
         seller_p = 'redstarus'
-        now = datetime.datetime.today()
+        now = datetime.today()
         print(now)
         # print(map(now))
         seller_name = seller_name
@@ -64,22 +75,24 @@ class Logic:
         print('totalPages=' + totalPages)
         totalEntries = dictstr.get('paginationOutput').get('totalEntries')
         print('totalPages=' + totalEntries)
-        for i in range(0,50): #len(dictstr.get('searchResult').get('item'))
+        for i in range(0,len(dictstr.get('searchResult').get('item'))): #len(dictstr.get('searchResult').get('item'))
             try:
                 print(i)
                 item_arr = {}
-                item_arr['itemId']=dictstr.get('searchResult').get('item')[i].get('itemId')
-                item_arr['title']=dictstr.get('searchResult').get('item')[i].get('title')
-                item_arr['globalId']=dictstr.get('searchResult').get('item')[i].get('globalId')
-                item_arr['galleryURL']=dictstr.get('searchResult').get('item')[i].get('galleryURL')
-                item_arr['viewItemURL']=dictstr.get('searchResult').get('item')[i].get('viewItemURL')
-                item_arr['storeName']=dictstr.get('searchResult').get('item')[i].get('storeInfo').get('storeName')
-                item_arr['storeURL']=dictstr.get('searchResult').get('item')[i].get('storeInfo').get('storeURL')
-                item_arr['_currencyId']=dictstr.get('searchResult').get('item')[i].get('sellingStatus').get('currentPrice').get('_currencyId')
-                item_arr['value']=dictstr.get('searchResult').get('item')[i].get('sellingStatus').get('currentPrice').get('value')
-                item_arr['active']=dictstr.get('searchResult').get('item')[i].get('sellingStatus').get('sellingState')
-                full_arr.append(item_arr)
-                item_id_arr.append(item_arr['itemId'])
+                stat = dictstr.get('searchResult').get('item')[i].get('isMultiVariationListing')
+                if stat=='false':
+                    item_arr['itemId']=dictstr.get('searchResult').get('item')[i].get('itemId')
+                    item_arr['title']=dictstr.get('searchResult').get('item')[i].get('title')
+                    item_arr['globalId']=dictstr.get('searchResult').get('item')[i].get('globalId')
+                    item_arr['galleryURL']=dictstr.get('searchResult').get('item')[i].get('galleryURL')
+                    item_arr['viewItemURL']=dictstr.get('searchResult').get('item')[i].get('viewItemURL')
+                    item_arr['storeName']=dictstr.get('searchResult').get('item')[i].get('storeInfo').get('storeName')
+                    item_arr['storeURL']=dictstr.get('searchResult').get('item')[i].get('storeInfo').get('storeURL')
+                    item_arr['_currencyId']=dictstr.get('searchResult').get('item')[i].get('sellingStatus').get('currentPrice').get('_currencyId')
+                    item_arr['value']=dictstr.get('searchResult').get('item')[i].get('sellingStatus').get('currentPrice').get('value')
+                    item_arr['active']=dictstr.get('searchResult').get('item')[i].get('sellingStatus').get('sellingState')
+                    full_arr.append(item_arr)
+                    item_id_arr.append(item_arr['itemId'])
             except:
                 pass
         print(item_arr)
@@ -122,33 +135,13 @@ class Logic:
         except ValueError:
             return False
 
-    def save_item_quantity(self,item_id_list,seller):
-        print('save_item_quantity')
-        url = "https://offer.ebay.com/ws/eBayISAPI.dll?ViewBidsLogin&item=" + item_id_list
-        # url='https://www.proxysite.com/'
-        collection = db['items_quantity']
-        ip_addresses = ['109.74.195.4:80', '138.201.2.120:3128', '138.68.165.154:8080', '61.37.223.152:8080',
-                        '161.202.226.194:80', '5.252.161.48:8080', '82.99.232.18:58689']
-        proxy_index = random.randint(0, len(ip_addresses) - 1)
-        print(proxy_index)
-        proxy = {"http": ip_addresses[proxy_index]}
-        print(proxy)
-        r = requests.get(url, proxies=proxy)
-        print(r.status_code)
-        soup = BeautifulSoup(r.content, 'lxml')
-        arr_quntiry = []
-        res_quantity = soup.findAll('td', {"class": "contentValueFont", "align": "middle"})
-        for q in res_quantity:
-            try:
-                # print(q.text)
-                arr_quntiry.append(q.text)
-            except:
-                pass
-        res_date = soup.findAll('td', {"class": "contentValueFont"})
-        dada_arr = []
+    def get_parsed_date(self,doc):
         arr = []
-        for result in res_date:
-            date_time_str = result.text
+        for element in doc.xpath(
+                '//table[@class="app-table__table"]//tr[@class="app-table__row"]/td[4]/div//text()'):
+            print(element)
+
+            date_time_str = element
 
             if self.fin_in_string(date_time_str) == False:
                 print(date_time_str)
@@ -164,7 +157,67 @@ class Logic:
                     arr.append(date_check)
                 except:
                     pass
+        return arr
+    def get_parsed_qt(self,doc):
+        arr_quntiry = []
+        for element in doc.xpath(
+                '//table[@class="app-table__table"]//tr[@class="app-table__row"]/td[3]/div//text()'):
+            try:
+                if int(element) == True:
+                    arr_quntiry.append(element)
+            except:
+                pass
+        return arr_quntiry
+    def save_item_quantity(self,item_id_list,seller,proxy):
+        print('save_item_quantity')
+        print(item_id_list)
+        url = "https://www.ebay.com/bin/purchaseHistory?item=" + item_id_list
+        ip_addresses = proxy
+        proxy_index = random.randint(0, len(ip_addresses) - 1)
+        print(proxy_index)
+        proxy = {"http": ip_addresses[proxy_index]}
+        print(proxy)
+        r = requests.get(url, proxies=proxy)
+        print(r.status_code)
+        text = r.content
+        print('Item Id')
+        print(item_id_list)
+        print(text)
+        doc = lxml.html.fromstring(r.content)
 
+        collection = db['items_quantity']
+        #get parsed selling quantity
+        arr_quntiry = self.get_parsed_qt(doc)
+        # res_quantity = soup.findAll('td', {"class": "contentValueFont", "align": "middle"})
+        # for q in res_quantity:
+        #     try:
+        #         # print(q.text)
+        #         arr_quntiry.append(q.text)
+        #     except:
+        #         pass
+
+        # res_date = soup.findAll('td', {"class": "contentValueFont"})
+        # dada_arr = []
+        # arr = []
+        # for result in res_date:
+        #     date_time_str = result.text
+        #
+        #     if self.fin_in_string(date_time_str) == False:
+        #         print(date_time_str)
+        #         print(self.fin_in_string(date_time_str))
+        #         try:
+        #             # print(date_time_str)
+        #             aa = parse(date_time_str, fuzzy_with_tokens=True)
+        #             print('Correct')
+        #             print(aa)
+        #             print(aa[0])
+        #             print(aa[0].strftime('%Y-%m-%d'))
+        #             date_check = aa[0].strftime('%Y-%m-%d')
+        #             arr.append(date_check)
+        #         except:
+        #             pass
+        # get parsed selling date
+        arr = self.get_parsed_date(doc)
         print('arr_quntiry + arr')
         print(arr)
         print(len(arr))
@@ -174,24 +227,27 @@ class Logic:
         print('Start to count quantyt by date')
         index = 0
         for da in arr:
-            print('Index' + str(index))
-            print(da)
-            print(arr[index])
-            print(arr_quntiry[index])
-            print('quntyt sell in ' + arr[index] + ' ' + arr_quntiry[index])
-            print(arr_quntiry[index])
-            qts = arr_quntiry[index]
             try:
-                acc[arr[index]] += int(qts)
+                print('Index' + str(index))
+                print(da)
+                print(arr[index])
+                print(arr_quntiry[index])
+                print('quntyt sell in ' + arr[index] + ' ' + arr_quntiry[index])
+                print(arr_quntiry[index])
+                qts = arr_quntiry[index]
+                try:
+                    acc[arr[index]] += int(qts)
+                except:
+                    acc[arr[index]] = 0
+                    acc[arr[index]] += int(qts)
+                print(acc)
+                index += 1
             except:
-                acc[arr[index]] = 0
-                acc[arr[index]] += int(qts)
-            print(acc)
-            index += 1
+                pass
         print('acc')
         print(acc)
         print(len(acc))
-        acc = sorted(acc.items(), key=lambda x: datetime.datetime.strptime(x[0], '%Y-%m-%d'), reverse=True)
+        acc = sorted(acc.items(), key=lambda x: datetime.strptime(x[0], '%Y-%m-%d'), reverse=True)
         for key in acc:
             dd = {}
             dd['itemId'] = item_id_list
@@ -201,7 +257,7 @@ class Logic:
             res = collection.count_documents({'itemId': itemId, 'date': key[0]})
             if res == 0:
                 collection.insert_one(dd)
-    def get_seller_data(self,seller):
+    def get_seller_data(self,seller,page):
         print('get_seller_data')
         print(seller)
         collection = db['users']
@@ -218,7 +274,7 @@ class Logic:
                 'outputSelector': 'StoreInfo',
                 'paginationInput': {
                     'entriesPerPage': '100',
-                    'pageNumber': 1
+                    'pageNumber': page
                 }
             })
             dictstr = api.response_dict()
@@ -234,13 +290,37 @@ class Logic:
                         print(item_id_list)
                         for url in item_id_list:
                             print('url '+url)
-                            threads.append(executor.submit(self.save_item_quantity, url,seller))
+                            proxy = self.get_proxy()
+                            threads.append(executor.submit(self.save_item_quantity, url,seller,proxy))
 
                         for task in as_completed(threads):
                             print(task.result())
                 return dictstr,True
             else:
                 return False,False
+    def get_selling_qt_day_by_day(self,seller,itemId,days):
+        now = datetime.today().strftime('%Y-%m-%d')
+        print(now)
+        lst_7d = datetime.today() - timedelta(days=int(days))
+        lst_7d = lst_7d.strftime('%Y-%m-%d')
+        collection = db['items_quantity']
+        # res = collection.find({'date': {'$gte': lst_7d, '$lt': now},'storeName':'redstarus','itemId':'313405796455'})#,'storeName':'redstarus','itemId':'313405796455'
+        res = collection.aggregate(
+            [{'$match': {'date': {'$gte': lst_7d, '$lt': now}, 'storeName': seller, 'itemId': itemId}}, {
+                '$group': {
+                    '_id': 'null',
+                    'total': {
+                        '$sum': '$quantity'
+                    }
+                }
+            }])
+        print(res)
+        try:
+            b = [a for a in res if a.get('total')]
+            return b[0].get('total')
+        except:
+            return 0
+
     def seller_date(self,seller):
         print('seller_date')
         all_date = {}
@@ -269,11 +349,13 @@ class Logic:
             all_qt=[]
             qt_res = {}
             for a in res_qt:
-                print('res_qt')
+                #print('res_qt')
                 all_date.append(a.get('date'))
                 all_qt.append(a.get('quantity'))
             qt_res['date'] = all_date
             qt_res['quantity'] = all_qt
+            qt_res['qt_30'] = self.get_selling_qt_day_by_day(seller,s.get('itemId'),30)
+            qt_res['qr_7'] = self.get_selling_qt_day_by_day(seller,s.get('itemId'),7)
             qt_arr.append(qt_res)
             item_res['qt_res'] = qt_arr
             item_arr.append(item_res)
@@ -308,7 +390,7 @@ def index(seller=None):
         seller = request.form['seller']
         #marcetplace = request.form['marcetplace']
         a = Logic(db)
-        ack_status,status=a.get_seller_data(seller)
+        ack_status,status=a.get_seller_data(seller,1)
         print(ack_status)
         # if status==1:
         #     len2 = len(ack_status)

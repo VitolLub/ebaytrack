@@ -8,7 +8,7 @@
 <body>
 <p>sdfasd</p>
 <form method="post">
-    <input name="seller" value="Seller" type="text">
+    <input name="seller" value="" placeholder="Seller" type="text">
 <button value="Send" type="submit">Send</button>
 </form>
  <ul>
@@ -18,30 +18,36 @@
     {% if seller  %}
 {#        <p>{{ seller }}</p>#}
         {%for i in range(0, len)%}
-            <table style="width:100%">
-              <tr>
+            <table style="width:100%">s
+                <tr>
                     <th>Item Id</th>
                     <th>Title</th>
                     <th>Marketplace</th>
-                  <th>Chart</th>
-                  <th>Photo</th>
-                  <th>Url</th>
-                  <th>Seller Name</th>
-                  <th>Kind</th>
-                  <th>Price</th>
-                  <th>Status</th>
-              </tr>
-              <tr>
-                <td>{{seller[i].itemId}}</td>
-                <td><a href="{{seller[i].viewItemURL}}">{{seller[i].title}}</a></td>
-                <td>{{seller[i].globalId}}</td>
-                  <td><a href="#" id="demo" onclick="getDate({{ seller[i].qt_res[0].date }},{{ seller[i].qt_res[0].quantity }})">Show</a></td>
-                  <td><img src="{{seller[i].galleryURL}}"></td>
-                  <td><a href="{{seller[i].storeURL}}">{{seller[i].storeName}}</a></td>
-                  <td>{{seller[i]._currencyId}}</td>
-                  <td>{{seller[i].value}}</td>
-                  <td>{{ seller[i].active}}</td>
-              </tr>
+                    <th>Chart</th>
+                    <th>7 Days</th>
+                    <th>30 Days</th>
+                    <th>Photo</th>
+                    <th>Url</th>
+                    <th>Seller Name</th>
+                    <th>Kind</th>
+                    <th>Price</th>
+                    <th>Status</th>
+                </tr>
+                <tr>
+                    <td>{{ seller[i].itemId }}</td>
+                    <td><a href="{{ seller[i].viewItemURL }}">{{ seller[i].title }}</a></td>
+                    <td>{{ seller[i].globalId }}</td>
+                    <td><a href="#" id="demo"
+                           onclick="getDate({{ seller[i].qt_res[0].date }},{{ seller[i].qt_res[0].quantity }})">Show</a>
+                    </td>
+                    <th>{{ seller[i].qt_res[0].qr_7 }}</th>
+                    <th>{{ seller[i].qt_res[0].qt_30 }}</th>
+                    <td><img src="{{ seller[i].galleryURL }}"></td>
+                    <td><a href="{{ seller[i].storeURL }}">{{ seller[i].storeName }}</a></td>
+                    <td>{{ seller[i]._currencyId }}</td>
+                    <td>{{ seller[i].value }}</td>
+                    <td>{{ seller[i].active }}</td>
+                </tr>
             </table>
         {%endfor%}
     {% endif %}
