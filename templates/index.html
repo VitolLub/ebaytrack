@@ -74,17 +74,10 @@
             </table>
 </ul>
 <script>
-          function getDate(elem,myArr,qtarr) {
-              {#// bar chart data#}
-              {#var iterable = elem.getAttribute("data_arr");#}
-              {##}
-              {#var qt = elem.getAttribute("qt_attr");#}
-              {#alert(qt);#}
-              {#alert(iterable);#}
-              let iterable = qtarr;//.split(",");
-              let qt = myArr;//.split(",");
-              alert(qtarr);
-              alert(qt);
+          function getDate(elem,myArr) {
+              var iterable2 = elem.getAttribute("date_attr")+'';
+              let iterable = iterable2.split(",");
+              let qt = myArr;
               a = [];
               var i = 0;
               for (i=0;i<iterable.length;i++) {
@@ -126,7 +119,7 @@
     //make array from string
         var page_count_array = page_count.split(",");
     // check lenght of items
-    if(page_count_array.length>70){
+    if(page_count_array.length>1){
         //get frist 10 elements from aray
         page_count = page_count_array.slice(0, 7);
         //convert sended array to string
@@ -157,19 +150,19 @@
                         date_arr = date.split(",");
                         console.log(date_arr)
                     }
-                    $('#live_load_body').append('<tr>' +
-                        '<td>' + element.itemId + '</td>' +
-                        '<td><a target="_blank" rel="nofollow" https://www.ebay.com/itm/" + element.itemId + ">" + element.title + " </a></td>" +
-                        '<td>" + element.globalId + "</td>" +
-                        '<td><a href="#" id="demo"  onclick='getDate(this,["+quantity_arr+"],["+date_arr+"])'>Show</a></td>" +
-                        '<td>' + element.qt_res[0].qr_7 + '</td>' +
-                        '<td>' + element.qt_res[0].qt_30 + '</td>' +
-                        '<td><a target='_blank' rel='nofollow' href=https://www.ebay.com/itm/" + element.itemId + "><img src=" + element.galleryURL + "></a>" + +"</td>" +
-                        '<td><a target='_blank' rel='nofollow' href=" + element.storeURL + ">" + element.storeName + "</a></td>" +
-                        '<td>' + element._currencyId + '</td>' +
-                        '<td>' + element.value + '</td>' +
-                        '<td>' + element.active + '</td>' +
-                        '</tr>');
+                    $('#live_load_body').append("<tr>" +
+                        "<td>" + element.itemId + "</td>" +
+                        "<td><a target='_blank' rel=\"nofollow\" href=https://www.ebay.com/itm/" + element.itemId + ">" + element.title + " </a></td>" +
+                        "<td>" + element.globalId + "</td>" +
+                        "<td><a href='#' id='demo' date_attr='"+[date_arr]+"' onclick='getDate(this,["+quantity_arr+"])'>Show</a></td>" +
+                        "<td>" + element.qt_res[0].qr_7 + "</td>" +
+                        "<td>" + element.qt_res[0].qt_30 + "</td>" +
+                        "<td><a target='_blank' rel='nofollow' href=https://www.ebay.com/itm/" + element.itemId + "><img src=" + element.galleryURL + "></a>" + +"</td>" +
+                        "<td><a target='_blank' rel='nofollow' href=" + element.storeURL + ">" + element.storeName + "</a></td>" +
+                        "<td>" + element._currencyId + "</td>" +
+                        "<td>" + element.value + "</td>" +
+                        "<td>" + element.active + "</td>" +
+                        "</tr>");
                 });
                 load_items()
             }

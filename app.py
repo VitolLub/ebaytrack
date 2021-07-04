@@ -333,7 +333,6 @@ class Logic:
             ack = dictstr.get('ack')
             totalPages = dictstr.get('paginationOutput').get('totalPages')
             print('totalPages=' + totalPages)
-            totalPages = 2
             # totalEntries = dictstr.get('paginationOutput').get('totalEntries')
             # print('totalPages=' + totalEntries)
             print(ack)
