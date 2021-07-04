@@ -4,20 +4,23 @@
   <meta charset="utf-8" />
   <title>{{ title }}</title>
   <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.min.js'></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+
 </head>
 <body>
 <p>sdfasd</p>
 <form method="post">
-    <input name="seller" value="" placeholder="Seller" type="text">
+    <input name="seller" value="{{ seller_name }}" placeholder="Seller" type="text">
 <button value="Send" type="submit">Send</button>
 </form>
+
  <ul>
     {% if message %}
     {% endif %}
         <p>{{ message }}</p>
     {% if seller  %}
-{#        <p>{{ seller }}</p>#}
-        {%for i in range(0, len)%}
+        <p>{{ seller }}</p>
+        {%for i in range(0, 20)%}
             <table style="width:100%">s
                 <tr>
                     <th>Item Id</th>
@@ -52,17 +55,39 @@
         {%endfor%}
     {% endif %}
    </ul>
+<ul>
+    <table id="live_load_body" style="width:100%">
+                <tr>
+                    <th>Item Id</th>
+                    <th>Title</th>
+                    <th>Marketplace</th>
+                    <th>Chart</th>
+                    <th>7 Days</th>
+                    <th>30 Days</th>
+                    <th>Photo</th>
+                    <th>Url</th>
+                    <th>Seller Name</th>
+                    <th>Kind</th>
+                    <th>Price</th>
+                    <th>Status</th>
+                </tr>
+            </table>
+</ul>
 <script>
-          function getDate(myArr,qtarr) {
-              // bar chart data
-              let iterable = myArr;
-              let qt = qtarr;
+          function getDate(elem,myArr,qtarr) {
+              {#// bar chart data#}
+              {#var iterable = elem.getAttribute("data_arr");#}
+              {##}
+              {#var qt = elem.getAttribute("qt_attr");#}
+              {#alert(qt);#}
+              {#alert(iterable);#}
+              let iterable = qtarr;//.split(",");
+              let qt = myArr;//.split(",");
+              alert(qtarr);
               alert(qt);
-              alert(iterable);
               a = [];
               var i = 0;
               for (i=0;i<iterable.length;i++) {
-                  console.log(iterable[i]);
                   a.push({x: new Date(iterable[i]), y: qt[i]});
               }
               var chart = new CanvasJS.Chart("chartContainer", {
@@ -85,6 +110,77 @@
 
           }
       </script>
+
+
+
+{% if item_id_array %}
+    <p id="seller_name" value="{{ seller_name_str }}" hidden></p>
+    <p id="page_count" value="{{ item_id_array }}" hidden></p>
+
+
+    <script type=text/javascript>
+    function load_items() {
+
+        var seller = $('#seller_name').attr('value');
+    var page_count = $('#page_count').attr('value');
+    //make array from string
+        var page_count_array = page_count.split(",");
+    // check lenght of items
+    if(page_count_array.length>70){
+        //get frist 10 elements from aray
+        page_count = page_count_array.slice(0, 7);
+        //convert sended array to string
+        var page_count_string = page_count.join();
+        //remove first 10 elemtns from aray
+        var updated_page_count_arr = page_count_array.splice(7, page_count_array.length);
+        //convert array to string
+        var new_arr = updated_page_count_arr.join();
+        //update element value
+        $('#page_count').attr("value", new_arr);
+        console.log(seller);
+        console.log(page_count_string);
+        $.ajax({
+            url: "/test1", //the page containing python script
+            type: "POST", //request type,
+            cache: false,
+            data: {seller: seller, page_count: page_count_string},
+            success: function (result) {
+                console.log(result);
+                const obj = JSON.parse(result);
+                $.each(obj, function (index, element) {
+                    var quantity_arr = [];
+                    var date_arr = [];
+                    var quantity = element.qt_res[0].quantity + '';
+                    var date = element.qt_res[0].date + '';
+                    if (quantity.length > 0) {
+                        quantity_arr = quantity.split(",");
+                        date_arr = date.split(",");
+                        console.log(date_arr)
+                    }
+                    $('#live_load_body').append('<tr>' +
+                        '<td>' + element.itemId + '</td>' +
+                        '<td><a target="_blank" rel="nofollow" https://www.ebay.com/itm/" + element.itemId + ">" + element.title + " </a></td>" +
+                        '<td>" + element.globalId + "</td>" +
+                        '<td><a href="#" id="demo"  onclick='getDate(this,["+quantity_arr+"],["+date_arr+"])'>Show</a></td>" +
+                        '<td>' + element.qt_res[0].qr_7 + '</td>' +
+                        '<td>' + element.qt_res[0].qt_30 + '</td>' +
+                        '<td><a target='_blank' rel='nofollow' href=https://www.ebay.com/itm/" + element.itemId + "><img src=" + element.galleryURL + "></a>" + +"</td>" +
+                        '<td><a target='_blank' rel='nofollow' href=" + element.storeURL + ">" + element.storeName + "</a></td>" +
+                        '<td>' + element._currencyId + '</td>' +
+                        '<td>' + element.value + '</td>' +
+                        '<td>' + element.active + '</td>' +
+                        '</tr>');
+                });
+                load_items()
+            }
+        });
+    }
+
+    }
+    load_items()
+</script>
+{% endif %}
+
 
 <div id="chartContainer" style="height: 370px; width: 100%;"></div>
 <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
