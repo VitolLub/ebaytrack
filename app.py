@@ -35,7 +35,7 @@ class Logic:
     def __init__(self,db):
         self.db = db
     def update_save_seller_datedate(self,date):
-        print(date)
+        pass
     def save_rest_of_data(self):
         pass
     def get_proxy(self):
@@ -48,13 +48,10 @@ class Logic:
     def save_seller_date(self,seller_name):
         collection = db['users']
         now = datetime.today()
-        print(now)
-        # print(map(now))
         seller_name = seller_name
         seller_p = seller_name
         seller = {'seller': seller_p}
         result = collection.find(seller).count()
-        print(result)
         if result == 0:
             seller_d = {}
             seller_d['seller'] = seller_p
@@ -66,22 +63,20 @@ class Logic:
             seller_d['seller'] = seller_p
             seller_d['last_update'] = now
             res = collection.replace_one({'seller': seller_p}, seller_d)
-            print(res.raw_result['updatedExisting'])
+
             return True
     def save_item_date(self,status,dictstr):
-        print(dictstr)
-        print(len(dictstr.get('searchResult').get('item')))
+
         collection = db['items_data']
         full_arr=[]
         item_id_arr=[]
         item_arr = {}
         totalPages = dictstr.get('paginationOutput').get('totalPages')
-        print('totalPages=' + totalPages)
+
         totalEntries = dictstr.get('paginationOutput').get('totalEntries')
-        print('totalPages=' + totalEntries)
+
         for i in range(0,len(dictstr.get('searchResult').get('item'))): #len(dictstr.get('searchResult').get('item'))
             try:
-                print(i)
                 item_arr = {}
                 stat = dictstr.get('searchResult').get('item')[i].get('isMultiVariationListing')
                 if stat=='false':
@@ -99,9 +94,6 @@ class Logic:
                     item_id_arr.append(item_arr['itemId'])
             except:
                 pass
-        print(item_arr)
-        print(full_arr)
-        print(len(full_arr))
         # if status==True:
         #     pass
         # if status==False:
@@ -120,7 +112,6 @@ class Logic:
             date = matches[0]
             if input_string.find("$") == -1:
                 print('Date is correct')
-
                 return False
         else:
             return True
@@ -143,20 +134,13 @@ class Logic:
         arr = []
         for element in doc.xpath(
                 '//table[@class="app-table__table"]//tr[@class="app-table__row"]/td[4]/div//text()'):
-            print(element)
+
 
             date_time_str = element
 
             if self.fin_in_string(date_time_str) == False:
-                print(date_time_str)
-                print(self.fin_in_string(date_time_str))
                 try:
-                    # print(date_time_str)
                     aa = parse(date_time_str, fuzzy_with_tokens=True)
-                    print('Correct')
-                    print(aa)
-                    print(aa[0])
-                    print(aa[0].strftime('%Y-%m-%d'))
                     date_check = aa[0].strftime('%Y-%m-%d')
                     arr.append(date_check)
                 except:
@@ -164,8 +148,6 @@ class Logic:
         return arr
     def item_id_array(self,seller):
         item_id_array = self.seller_date(seller)
-        print('seller_date2')
-        print(item_id_array)
         item_id_array = ', '.join(item_id_array)
         return item_id_array
     def get_parsed_qt(self,doc):
@@ -183,7 +165,6 @@ class Logic:
         item_id_arr = []
         for a in range(1, int(pages_count)):
             dictstr =''
-            print("Page number {}".format(a))
             api = finding(siteid='EBAY-US', appid='LubomirV-devbattl-PRD-9b058513b-91c210eb', config_file=None)
             api.execute('findItemsIneBayStores', {
                 'storeName': str(seller),
@@ -207,11 +188,8 @@ class Logic:
                 'sortOrder': 'PricePlusShippingLowest'
             })
             dictstr = api.response_dict()
-            print(dictstr)
             for i in range(0, len(dictstr.get('searchResult').get('item'))):
                 stat = dictstr.get('searchResult').get('item')[i].get('isMultiVariationListing')
-                # print(stat)
-                # print(dictstr.get('searchResult').get('item')[i].get('itemId'))
                 #if dictstr.get('searchResult').get('item')[i].get('itemId') not in item_id_arr:
                 item_arr = {}
                 item_arr['itemId'] =  dictstr.get('searchResult').get('item')[i].get('itemId') or ''
@@ -230,31 +208,21 @@ class Logic:
                     'value') or ''
                 item_arr['active'] = dictstr.get('searchResult').get('item')[i].get('sellingStatus').get(
                     'sellingState') or ''
-                #print(item_arr)
                 full_arr.append(item_arr)
                 item_id_arr.append(item_arr['itemId'])
         try:
             collection = db['items_data']
             save_res = collection.insert_many(full_arr)
-            print(save_res.inserted_ids)
             return item_id_arr
         except:
             return False
     def save_item_quantity(self,item_id_list,seller,proxy):
-        print('save_item_quantity')
-        print(item_id_list)
         url = "https://www.ebay.com/bin/purchaseHistory?item=" + item_id_list
         ip_addresses = proxy
         proxy_index = random.randint(0, len(ip_addresses) - 1)
-        print(proxy_index)
         proxy = {"http": ip_addresses[proxy_index]}
-        print(proxy)
         r = requests.get(url, proxies=proxy)
-        print(r.status_code)
         text = r.content
-        print('Item Id')
-        print(item_id_list)
-        print(text)
         doc = lxml.html.fromstring(r.content)
 
         collection = db['items_quantity']
@@ -262,35 +230,19 @@ class Logic:
         arr_quntiry = self.get_parsed_qt(doc)
 
         arr = self.get_parsed_date(doc)
-        print('arr_quntiry + arr')
-        print(arr)
-        print(len(arr))
-        print(arr_quntiry)
-        print(len(arr_quntiry))
         acc = {}
-        print('Start to count quantyt by date')
         index = 0
         for da in arr:
             try:
-                print('Index' + str(index))
-                print(da)
-                print(arr[index])
-                print(arr_quntiry[index])
-                print('quntyt sell in ' + arr[index] + ' ' + arr_quntiry[index])
-                print(arr_quntiry[index])
                 qts = arr_quntiry[index]
                 try:
                     acc[arr[index]] += int(qts)
                 except:
                     acc[arr[index]] = 0
                     acc[arr[index]] += int(qts)
-                print(acc)
                 index += 1
             except:
                 pass
-        print('acc')
-        print(acc)
-        print(len(acc))
         acc = sorted(acc.items(), key=lambda x: datetime.strptime(x[0], '%Y-%m-%d'), reverse=True)
         for key in acc:
             dd = {}
@@ -302,8 +254,6 @@ class Logic:
             if res == 0:
                 collection.insert_one(dd)
     def get_seller_data(self,seller,page):
-        print('get_seller_data')
-        print(seller)
         collection = db['users']
         seller_qt =0
         if seller_qt==0:
@@ -332,20 +282,15 @@ class Logic:
             dictstr = api.response_dict()
             ack = dictstr.get('ack')
             totalPages = dictstr.get('paginationOutput').get('totalPages')
-            print('totalPages=' + totalPages)
             # totalEntries = dictstr.get('paginationOutput').get('totalEntries')
-            # print('totalPages=' + totalEntries)
-            print(ack)
+
             if ack=="Success":
                 item_id_list = self.collect_all_pages(totalPages, seller)
                 status = self.save_seller_date(seller)
 
-                print('item_id_list')
-                print(item_id_list)
 
                 pool = Pool(cpu_count())
                 for item_id in item_id_list:
-                    print("Item Id checking {}".format(item_id))
                     proxy = self.get_proxy()
                     pool.apply_async(save_item_quantity, (item_id, seller, proxy))
                 return True
@@ -407,12 +352,10 @@ class Logic:
         return ack
 
     def collect_all_seller_data(self,seller, item_date, items_quantity_collection):
-        print('seller_date1')
         all_date = {}
         item_arr = []
         for s in item_date:  #
             item_res = {}
-            print(s.get('itemId'))
             item_res['itemId'] = s.get('itemId')
             item_res['title'] = s.get('title')
             item_res['globalId'] = s.get('globalId')
@@ -423,14 +366,12 @@ class Logic:
             item_res['_currencyId'] = s.get('_currencyId')
             item_res['value'] = s.get('value')
             item_res['active'] = s.get('active')
-            # print(item_res)
             res_qt = items_quantity_collection.find({'storeName': seller, 'itemId': s.get('itemId')})
             qt_arr = []
             all_date = []
             all_qt = []
             qt_res = {}
             for a in res_qt:
-                # print('res_qt')
                 all_date.append(a.get('date'))
                 all_qt.append(a.get('quantity'))
             qt_res['date'] = all_date
@@ -484,8 +425,6 @@ def index(seller=None):
         a = Logic(db)
         #check if seller available i database
         seller_available = a.check_seler_available(seller)
-        print('seller_available')
-        print(seller_available)
         #check if seller availabel on ebay
         if seller_available==False:
             res = a.check_seller_on_ebay(seller)
@@ -499,7 +438,6 @@ def index(seller=None):
                 return render_template('index.html', item_id_array=item_id_array,seller_name_str=seller, seller_name='')
         # if selelr available in local database
         if seller_available==True:
-            print('Rule 1')
             item_id_array = a.item_id_array(seller)
             for a in item_id_array:
                 print(a)
@@ -507,12 +445,10 @@ def index(seller=None):
     else:
         return render_template('index.html', seller=seller)
 def collect_all_seller_data(seller,item_date,items_quantity_collection):
-    print('seller_date1')
     all_date = {}
     item_arr = []
     for s in item_date:  #
         item_res = {}
-        print(s.get('itemId'))
         item_res['itemId'] = s.get('itemId')
         item_res['title'] = s.get('title')
         item_res['globalId'] = s.get('globalId')
@@ -530,7 +466,6 @@ def collect_all_seller_data(seller,item_date,items_quantity_collection):
         all_qt = []
         qt_res = {}
         for a in res_qt:
-            # print('res_qt')
             all_date.append(a.get('date'))
             all_qt.append(a.get('quantity'))
         qt_res['date'] = all_date
@@ -543,20 +478,13 @@ def collect_all_seller_data(seller,item_date,items_quantity_collection):
         item_arr.append(item_res)
     return item_arr
 def save_item_quantity(item_id_list,seller,proxy):
-    print('save_item_quantity')
-    print(item_id_list)
     url = "https://www.ebay.com/bin/purchaseHistory?item=" + item_id_list
     ip_addresses = proxy
     proxy_index = random.randint(0, len(ip_addresses) - 1)
-    print(proxy_index)
     proxy = {"http": ip_addresses[proxy_index]}
-    print(proxy)
     r = requests.get(url, proxies=proxy)
-    print(r.status_code)
     text = r.content
-    print('Item Id')
     print(item_id_list)
-    print(text)
     doc = lxml.html.fromstring(r.content)
 
     collection = db['items_quantity']
