@@ -5,7 +5,6 @@
   <title>{{ title }}</title>
   <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.min.js'></script>
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-
 </head>
 <body>
 <p>sdfasd</p>
@@ -14,65 +13,30 @@
 <button value="Send" type="submit">Send</button>
 </form>
 
- <ul>
-    {% if message %}
-    {% endif %}
-        <p>{{ message }}</p>
-    {% if seller  %}
-        <p>{{ seller }}</p>
-        {%for i in range(0, 20)%}
-            <table style="width:100%">s
-                <tr>
-                    <th>Item Id</th>
-                    <th>Title</th>
-                    <th>Marketplace</th>
-                    <th>Chart</th>
-                    <th>7 Days</th>
-                    <th>30 Days</th>
-                    <th>Photo</th>
-                    <th>Url</th>
-                    <th>Seller Name</th>
-                    <th>Kind</th>
-                    <th>Price</th>
-                    <th>Status</th>
-                </tr>
-                <tr>
-                    <td>{{ seller[i].itemId }}</td>
-                    <td><a href="{{ seller[i].viewItemURL }}">{{ seller[i].title }}</a></td>
-                    <td>{{ seller[i].globalId }}</td>
-                    <td><a href="#" id="demo"
-                           onclick="getDate({{ seller[i].qt_res[0].date }},{{ seller[i].qt_res[0].quantity }})">Show</a>
-                    </td>
-                    <th>{{ seller[i].qt_res[0].qr_7 }}</th>
-                    <th>{{ seller[i].qt_res[0].qt_30 }}</th>
-                    <td><img src="{{ seller[i].galleryURL }}"></td>
-                    <td><a href="{{ seller[i].storeURL }}">{{ seller[i].storeName }}</a></td>
-                    <td>{{ seller[i]._currencyId }}</td>
-                    <td>{{ seller[i].value }}</td>
-                    <td>{{ seller[i].active }}</td>
-                </tr>
+
+<div id="users">
+  <input class="search" placeholder="Search" />
+  <button class="sort" data-sort="qt_30">
+    Sort by 30 days
+  </button>
+    <button class="sort" data-sort="qt_7">
+    Sort by 7 days
+  </button>
+    <table  style="width:100%">
+                 
+                <tbody class="list" id="live_load_body">
+
+                </tbody>
             </table>
-        {%endfor%}
-    {% endif %}
-   </ul>
-<ul>
-    <table id="live_load_body" style="width:100%">
-                <tr>
-                    <th>Item Id</th>
-                    <th>Title</th>
-                    <th>Marketplace</th>
-                    <th>Chart</th>
-                    <th>7 Days</th>
-                    <th>30 Days</th>
-                    <th>Photo</th>
-                    <th>Url</th>
-                    <th>Seller Name</th>
-                    <th>Kind</th>
-                    <th>Price</th>
-                    <th>Status</th>
-                </tr>
-            </table>
-</ul>
+</div>
+<script src="//cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
+<script>
+    var options = {
+  valueNames: [ 'qt_30', 'qt_7' ]
+};
+
+var userList = new List('users', options);
+</script>
 <script>
           function getDate(elem,myArr) {
               var iterable2 = elem.getAttribute("date_attr")+'';
@@ -155,8 +119,8 @@
                         "<td><a target='_blank' rel=\"nofollow\" href=https://www.ebay.com/itm/" + element.itemId + ">" + element.title + " </a></td>" +
                         "<td>" + element.globalId + "</td>" +
                         "<td><a href='#' id='demo' date_attr='"+[date_arr]+"' onclick='getDate(this,["+quantity_arr+"])'>Show</a></td>" +
-                        "<td>" + element.qt_res[0].qr_7 + "</td>" +
-                        "<td>" + element.qt_res[0].qt_30 + "</td>" +
+                        "<td class='qt_7'>" + element.qt_res[0].qr_7 + "</td>" +
+                        "<td class='qt_30'>" + element.qt_res[0].qt_30 + "</td>" +
                         "<td><a target='_blank' rel='nofollow' href=https://www.ebay.com/itm/" + element.itemId + "><img src=" + element.galleryURL + "></a>" + +"</td>" +
                         "<td><a target='_blank' rel='nofollow' href=" + element.storeURL + ">" + element.storeName + "</a></td>" +
                         "<td>" + element._currencyId + "</td>" +
