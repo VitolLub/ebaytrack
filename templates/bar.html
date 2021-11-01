@@ -2,65 +2,115 @@
 <html lang="en">
 <head>
 
-  <meta charset="utf-8" />
-  <title>{{ title }}</title>
-  <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.min.js'></script>
+    <meta charset="utf-8"/>
+    <title>{{ title }}</title>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.min.js'></script>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/style.css') }}">
+    <script src="{{ url_for('static', filename='js/modal.js') }}"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.css" rel="stylesheet"/>
+    <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+    <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
 </head>
 
 <body>
-<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
-  <center>
-    <h1>{{ title }}</h1>
-  </center>
-  <center>
-    <a href="#" id="demo" onclick="getDate(this,[100, 200.89, 400.75, 1349.19,
-                          2328.91, 222.28, 2873.83, 4764.87,
-                          4349.29, 100.30],['2021-05-21', '2021-05-22', '2021-05-23','2021-05-24','2021-05-25','2021-05-26','2021-05-27','2021-05-28','2021-05-29','2021-05-30'])" value="sdfsd">dfds1</a>
-      <a href="#" id="demo" onclick="getDate(this,[100, 200.89, 400.75, 1349.19,
-                          2328.91, 2504.28, 2873.83, 100.87,
-                          4349.29, 100.30],['2021-05-21', '2021-05-22', '2021-05-23','2021-05-24','2021-05-25','2021-05-26','2021-05-27','2021-05-28','2021-05-29','2021-05-30'])" value="sdfsd">dfds2</a>
-      <a href="#" id="demo" onclick="getDate(this,[25, 200.89, 400.75, 1349.19,
-                          2328.91, 11.28, 20.83, 4764.87,
-                          4349.29, 100.30],['2021-05-21', '2021-05-22', '2021-05-23','2021-05-24','2021-05-25','2021-05-26','2021-05-27','2021-05-28','2021-05-29','2021-05-30'])" value="sdfsd">dfds3</a>
- <script>
+<form method="post">
+    <div class="search-wrapper active">
+        <div class="input-holder">
+            <input type="text" name="seller" placeholder="Seller" value="{{ seller_name }}" class="search-input"  />
+            <button class="search-icon"><span></span></button>
+        </div>
+    </div>
+</form>
+<div class="table-wrapper" id="users">
+    <div class="sort-tab">
+        <input class="search" placeholder="Search"/>
+            <button class="sort btn btn-info btn-lg" data-sort="name">
+                Sort By Name
+            </button>
+            <button class="sort btn btn-info btn-lg" data-sort="qt_30">
+                Sort By 30 days Sell
+            </button>
+            <button class="sort btn btn-info btn-lg" data-sort="qt_7">
+                Sort By 7 days Sell
+            </button>
+    </div>
 
-                      var myGeocode = ['['2021-05-25', '2021-05-24', '2021-05-23', '2021-05-22', '2021-05-21', '2021-05-20', '2021-05-19', '2021-05-18', '2021-05-17', '2021-05-16', '2021-05-15', '2021-05-14', '2021-05-13', '2021-05-12', '2021-05-11', '2021-05-10', '2021-05-09', '2021-05-07', '2021-05-06', '2021-05-05', '2021-05-04', '2021-05-03', '2021-05-02', '2021-05-01', '2021-04-30', '2021-04-29', '2021-04-28', '2021-04-27', '2021-04-26', '2021-04-25', '2021-04-24', '2021-04-23', '2021-04-22', '2021-04-21', '2021-04-20', '2021-04-19', '2021-04-18', '2021-04-17', '2021-04-16', '2021-04-11', '2021-04-10', '2021-04-09', '2021-04-07', '2021-04-01', '2021-03-31', '2021-03-30', '2021-03-26', '2021-03-25', '2021-03-24', '2021-03-23', '2021-03-21', '2021-03-18', '2021-04-02', '2021-03-27']'];
-                      alert(myGeocode[0]);
-                    </script>
-      <script>
-          function getDate(a, myArr,qtarr) {
-              // bar chart data
-              let iterable = qtarr;
-              let qt = myArr;
-              a = [];
-              var i = 0;
-              for (i=0;i<iterable.length;i++) {
-                  a.push({x: new Date(iterable[i]), y: qt[i]});
-              }
-              var chart = new CanvasJS.Chart("chartContainer", {
-                  animationEnabled: true,
-                  zoomEnabled: true,
-                  theme: "dark2",
-                  title: {
-                      text: "Selling day by day"
-                  },
-                  data: [{
-                      type: "line",
-                      xValueFormatString: "",
-                      showInLegend: true,
-                      name: "Log Scale",
 
-                      dataPoints: a
-                  }]
-              });
-              chart.render();
 
-          }
-      </script>
+    <table class="styled-table">
+        <thead>
+        <tr>
+            <th>Image</th>
+            <th>Product ID</th>
+            <th>Title</th>
+            <th>Marcetplace</th>
+            <th>Sellername</th>
+            <th>Currency</th>
+            <th>Price</th>
+            <th>Analitycs</th>
+            <th>Sale for 30 days</th>
+            <th>Sale for 7 days</th>
+            <th>Status</th>
+        </tr>
+        </thead>
+        <!-- IMPORTANT, class="list" have to be at tbody -->
+        <tbody class="list">
 
-<div id="chartContainer" style="height: 370px; width: 100%;"></div>
-<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
-<div style="margin-top:16px;color:dimgrey;font-size:9px;font-family: Verdana, Arial, Helvetica, sans-serif;text-decoration:none;">Source: <a href="https://canvasjs.com/html5-javascript-line-chart/" target="_blank" title="JavaScript Line Charts &amp; Graphs ">https://canvasjs.com/html5-javascript-line-chart/</a></div>
-  </center>
+        {% for user in data_res %}
+            <tr>
+                <td><img src="{{ user.galleryURL }}"></td>
+                <td>{{ user.itemId }}</td>
+                <td class="name"><a target="_blank" follow="nofollow" href="{{ user.viewItemURL }}">{{ user.title }}</a>
+                </td>
+                <td>{{ user.globalId }}</td>
+                <td>{{ user.storeName }}</td>
+                <td>{{ user._currencyId }}</td> <!--    -->
+                <td>{{ user.value }}</td>
+                <td>
+                    <button type="button" id="modalBtn" class="btn btn-info btn-lg" data-toggle="modal"
+                            data-target="#chartModal" date_attr='{{ user.qt_res[0].date }}'
+                            onclick='getDate(this,{{ user.qt_res[0].quantity }})'>Show
+                    </button>
+                </td>
+                <td class="qt_30">{{ user.qt_res[0].qt_30 }}</td>
+                <td class="qt_7">{{ user.qt_res[0].qr_7 }}</td>
+                <td>{{ user.active }}</td>
+            </tr>
+        {% endfor %}
+
+
+        </tbody>
+    </table>
+<script>
+        var options = {
+  valueNames: [ 'name', 'qt_30', 'qt_7' ]
+};
+
+var userList = new List('users', options);
+</script>
+
+
+
+
+    <!-- Modal -->
+    <div class="modal fade" id="chartModal" role="dialog">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">CanvasJS Chart within Bootstrap Modal</h4>
+                </div>
+                <div class="modal-body">
+                    <div id="chartContainer" style="height: 360px; width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 </body>
 </html>

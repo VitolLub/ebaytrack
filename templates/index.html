@@ -1,147 +1,117 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>{{ title }}</title>
-  <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.min.js'></script>
-  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+
+    <meta charset="utf-8"/>
+    <title>{{ title }}</title>
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.min.js'></script>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='styles/style.css') }}">
+    <script src="{{ url_for('static', filename='js/modal.js') }}"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.css" rel="stylesheet"/>
+    <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+    <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
 </head>
+
 <body>
-<p>sdfasd</p>
-<form method="post">
-    <input name="seller" value="{{ seller_name }}" placeholder="Seller" type="text">
-<button value="Send" type="submit">Send</button>
+<div>
+    <form class="example" method="post" style="margin:auto;max-width:300px">
+  <input type="text" name="seller" placeholder="Seller" value="{{ seller_name }}" class="search-input" >
+  <button type="submit"><i class="fa fa-search"></i>OK</button>
 </form>
-
-
-<div id="users">
-  <input class="search" placeholder="Search" />
-  <button class="sort" data-sort="qt_30">
-    Sort by 30 days
-  </button>
-    <button class="sort" data-sort="qt_7">
-    Sort by 7 days
-  </button>
-    <table  style="width:100%">
-                 
-                <tbody class="list" id="live_load_body">
-
-                </tbody>
-            </table>
 </div>
-<script src="//cdnjs.cloudflare.com/ajax/libs/list.js/1.5.0/list.min.js"></script>
+
+
+
+<div class="table-wrapper" id="users">
+    <div class="sort-tab">
+        <input class="search" placeholder="Search"/>
+            <button class="sort btn btn-info btn-lg" data-sort="name">
+                Sort By Name
+            </button>
+            <button class="sort btn btn-info btn-lg" data-sort="qt_30">
+                Sort By 30 days Sell
+            </button>
+            <button class="sort btn btn-info btn-lg" data-sort="qt_7">
+                Sort By 7 days Sell
+            </button>
+    </div>
+
+
+
+    <table class="styled-table">
+        <thead>
+        <tr>
+            <th>Image</th>
+            <th>Product ID</th>
+            <th>Title</th>
+            <th>Marcetplace</th>
+            <th>Sellername</th>
+            <th>Currency</th>
+            <th>Price</th>
+            <th>Analitycs</th>
+            <th>Sale for 30 days</th>
+            <th>Sale for 7 days</th>
+            <th>Status</th>
+        </tr>
+        </thead>
+        <!-- IMPORTANT, class="list" have to be at tbody -->
+        <tbody class="list">
+
+        {% for user in data_res %}
+            <tr>
+                <td><img src="{{ user.galleryURL }}"></td>
+                <td>{{ user.itemId }}</td>
+                <td class="name"><a target="_blank" follow="nofollow" href="{{ user.viewItemURL }}">{{ user.title }}</a>
+                </td>
+                <td>{{ user.globalId }}</td>
+                <td>{{ user.storeName }}</td>
+                <td>{{ user._currencyId }}</td> <!--    -->
+                <td>{{ user.value }}</td>
+                <td>
+                    <button type="button" id="modalBtn" class="btn btn-info btn-lg" data-toggle="modal"
+                            data-target="#chartModal" date_attr='{{ user.qt_res[0].date }}'
+                            onclick='getDate(this,{{ user.qt_res[0].quantity }})'>Show
+                    </button>
+                </td>
+                <td class="qt_30">{{ user.qt_res[0].qt_30 }}</td>
+                <td class="qt_7">{{ user.qt_res[0].qr_7 }}</td>
+                <td>{{ user.active }}</td>
+            </tr>
+        {% endfor %}
+
+
+        </tbody>
+    </table>
 <script>
-    var options = {
-  valueNames: [ 'qt_30', 'qt_7' ]
+        var options = {
+  valueNames: [ 'name', 'qt_30', 'qt_7' ]
 };
 
 var userList = new List('users', options);
 </script>
-<script>
-          function getDate(elem,myArr) {
-              var iterable2 = elem.getAttribute("date_attr")+'';
-              let iterable = iterable2.split(",");
-              let qt = myArr;
-              a = [];
-              var i = 0;
-              for (i=0;i<iterable.length;i++) {
-                  a.push({x: new Date(iterable[i]), y: qt[i]});
-              }
-              var chart = new CanvasJS.Chart("chartContainer", {
-                  animationEnabled: true,
-                  zoomEnabled: true,
-                  theme: "dark2",
-                  title: {
-                      text: "Selling day by day"
-                  },
-                  data: [{
-                      type: "line",
-                      xValueFormatString: "",
-                      showInLegend: true,
-                      name: "Log Scale",
-
-                      dataPoints: a
-                  }]
-              });
-              chart.render();
-
-          }
-      </script>
 
 
 
-{% if item_id_array %}
-    <p id="seller_name" value="{{ seller_name_str }}" hidden></p>
-    <p id="page_count" value="{{ item_id_array }}" hidden></p>
 
+    <!-- Modal -->
+    <div class="modal fade" id="chartModal" role="dialog">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">Selle day by day</h4>
+                </div>
+                <div class="modal-body">
+                    <div id="chartContainer" style="height: 360px; width: 100%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <script type=text/javascript>
-    function load_items() {
-
-        var seller = $('#seller_name').attr('value');
-    var page_count = $('#page_count').attr('value');
-    //make array from string
-        var page_count_array = page_count.split(",");
-    // check lenght of items
-    if(page_count_array.length>1){
-        //get frist 10 elements from aray
-        page_count = page_count_array.slice(0, 7);
-        //convert sended array to string
-        var page_count_string = page_count.join();
-        //remove first 10 elemtns from aray
-        var updated_page_count_arr = page_count_array.splice(7, page_count_array.length);
-        //convert array to string
-        var new_arr = updated_page_count_arr.join();
-        //update element value
-        $('#page_count').attr("value", new_arr);
-        console.log(seller);
-        console.log(page_count_string);
-        $.ajax({
-            url: "/test1", //the page containing python script
-            type: "POST", //request type,
-            cache: false,
-            data: {seller: seller, page_count: page_count_string},
-            success: function (result) {
-                console.log(result);
-                const obj = JSON.parse(result);
-                $.each(obj, function (index, element) {
-                    var quantity_arr = [];
-                    var date_arr = [];
-                    var quantity = element.qt_res[0].quantity + '';
-                    var date = element.qt_res[0].date + '';
-                    if (quantity.length > 0) {
-                        quantity_arr = quantity.split(",");
-                        date_arr = date.split(",");
-                        console.log(date_arr)
-                    }
-                    $('#live_load_body').append("<tr>" +
-                        "<td>" + element.itemId + "</td>" +
-                        "<td><a target='_blank' rel=\"nofollow\" href=https://www.ebay.com/itm/" + element.itemId + ">" + element.title + " </a></td>" +
-                        "<td>" + element.globalId + "</td>" +
-                        "<td><a href='#' id='demo' date_attr='"+[date_arr]+"' onclick='getDate(this,["+quantity_arr+"])'>Show</a></td>" +
-                        "<td class='qt_7'>" + element.qt_res[0].qr_7 + "</td>" +
-                        "<td class='qt_30'>" + element.qt_res[0].qt_30 + "</td>" +
-                        "<td><a target='_blank' rel='nofollow' href=https://www.ebay.com/itm/" + element.itemId + "><img src=" + element.galleryURL + "></a>" + +"</td>" +
-                        "<td><a target='_blank' rel='nofollow' href=" + element.storeURL + ">" + element.storeName + "</a></td>" +
-                        "<td>" + element._currencyId + "</td>" +
-                        "<td>" + element.value + "</td>" +
-                        "<td>" + element.active + "</td>" +
-                        "</tr>");
-                });
-                load_items()
-            }
-        });
-    }
-
-    }
-    load_items()
-</script>
-{% endif %}
-
-
-<div id="chartContainer" style="height: 370px; width: 100%;"></div>
-<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
-<div style="margin-top:16px;color:dimgrey;font-size:9px;font-family: Verdana, Arial, Helvetica, sans-serif;text-decoration:none;">Source: <a href="https://canvasjs.com/html5-javascript-line-chart/" target="_blank" title="JavaScript Line Charts &amp; Graphs ">https://canvasjs.com/html5-javascript-line-chart/</a></div>
 
 </body>
 </html>

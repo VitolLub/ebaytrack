@@ -1,5 +1,5 @@
 import time
-
+from flask import send_file
 from flask import Flask, request,render_template,Response,jsonify,json, session
 from pymongo import MongoClient
 from ebaysdk.finding import Connection as finding
@@ -14,6 +14,8 @@ import lxml.html
 from datetime import *
 from multiprocessing import Pool,cpu_count
 import os
+
+from scipy.sparse import data
 
 app = Flask(__name__)
 SESSION_TYPE = "redis"
@@ -152,6 +154,8 @@ class Logic:
             variation_index = 4
         print(variation_index)
         arr = []
+        aa = len(doc.xpath(f'//table[@class="app-table__table"]//td[{variation_index}]/div//text()'))
+        print(f'check element qt - {aa}')
         for element in doc.xpath(f'//table[@class="app-table__table"]//td[{variation_index}]/div//text()'):
 
 
@@ -182,11 +186,8 @@ class Logic:
         arr_quntiry = []
         for element in doc.xpath(f'//table[@class="app-table__table"]//td[{variation_index}]/div//text()'):
             print(element)
-            try:
-                if int(element) == True:
-                    arr_quntiry.append(element)
-            except:
-                pass
+            if int(element) == True:
+                arr_quntiry.append(element)
         return arr_quntiry
     def collect_all_pages(self,pages_count, seller):
         full_arr = []
@@ -400,7 +401,7 @@ class Logic:
             for a in res_qt:
                 all_date.append(a.get('date'))
                 all_qt.append(a.get('quantity'))
-            qt_res['date'] = all_date
+            qt_res['date'] = ','.join([str(elem) for elem in all_date])
             qt_res['quantity'] = all_qt
             qt_res['qt_30'] = self.get_selling_qt_day_by_day(seller, s.get('itemId'), 30)
             qt_res['qr_7'] = self.get_selling_qt_day_by_day(seller, s.get('itemId'), 8)
@@ -416,29 +417,32 @@ class Logic:
             if a.get('itemId') not in itemId_arr:
                 itemId_arr.append(a.get('itemId'))
         return itemId_arr
+    def get_all_datas_by_seller_name(self,seller):
+        items_quantity_collection = db['items_quantity']
+        collection = db['items_data']
+        item_date = collection.find({'storeName': seller})
+        data_res = self.collect_all_seller_data(seller, item_date, items_quantity_collection)
+        return data_res
 
-labels = [
-    'JAN', 'FEB', 'MAR', 'APR',
-    'MAY', 'JUN', 'JUL', 'AUG',
-    'SEP', 'OCT', 'NOV', 'DEC'
-]
 
-values = [
-    967.67, 1190.89, 1079.75, 1349.19,
-    2328.91, 2504.28, 2873.83, 4764.87,
-    4349.29, 6458.30, 9907, 16297
-]
 
-colors = [
-    "#F7464A", "#46BFBD", "#FDB45C", "#FEDCBA",
-    "#ABCDEF", "#DDDDDD", "#ABCABC", "#4169E1",
-    "#C71585", "#FF4500", "#FEDCBA", "#46BFBD"]
+
+@app.route('/download')
+def downloadFile():
+    #For windows you need to use drive name [ex: F:/Example.pdf]
+    path = "C:\ebaytrack\GFG.csv"
+    return send_file(path, as_attachment=True)
 
 @app.route('/bar')
 def bar():
-    bar_labels=labels
-    bar_values=values
-    return render_template('bar.html', title='Bitcoin Monthly Price in USD', max=17000, labels=bar_labels, values=bar_values)
+    a = Logic(db)
+    seller = 'roughriders12'
+    items_quantity_collection = db['items_quantity']
+    collection = db['items_data']
+    item_date = collection.find({'storeName': seller})
+    data_res = a.collect_all_seller_data(seller, item_date, items_quantity_collection)
+    print(data_res)
+    return render_template('bar.html', data_res=data_res)
 
 @app.route('/',methods=['GET','POST'])
 def index(seller=None):
@@ -465,16 +469,16 @@ def index(seller=None):
                 status = a.get_seller_data(seller, 1)
                 print(f'receive sattus after save data {status}')
                 if status==True:
-                    item_id_array = a.item_id_array(seller)
-
-                    print(f'item_id_array {item_id_array}')
-                    print(f'item_id_array {type(item_id_array)}')
-                return render_template('index.html', item_id_array=item_id_array,seller_name_str=seller, seller_name='')
+                    #item_id_array = a.item_id_array(seller)
+                    data_res = a.get_all_datas_by_seller_name(seller)
+                    #print(f'item_id_array {item_id_array}')
+                    #print(f'item_id_array {type(item_id_array)}')
+                return render_template('index.html', data_res=data_res,seller_name_str=seller, seller_name='')
         # if selelr available in local database
         if seller_available==True:
-            item_id_array = a.item_id_array(seller)
-            print(f'item_id_array {item_id_array}')
-            return render_template('index.html', item_id_array=item_id_array,seller_name_str=seller, seller_name='')
+            data_res = a.get_all_datas_by_seller_name(seller)
+            print(f'item_id_array {data_res}')
+            return render_template('index.html', data_res=data_res,seller_name_str=seller, seller_name='')
     else:
         return render_template('index.html', seller=seller)
 def collect_all_seller_data(seller,item_date,items_quantity_collection):
@@ -519,6 +523,7 @@ def save_item_quantity(item_id_list,seller,proxy):
     r = requests.get(url, proxies=proxy)
     print(f'get quantity satus code {r.status_code}')
     text = r.content
+    print(f'get quantity satus code {r.status_code}')
     print(item_id_list)
     doc = lxml.html.fromstring(r.content)
 
@@ -571,23 +576,7 @@ def save_item_quantity(item_id_list,seller,proxy):
             collection.insert_one(dd)
     print('save_item_quantity done')
     return True
-@app.route('/test1',methods=['GET','POST'])
-def test1():
-    a = Logic(db)
 
-    collection = db['items_data']
-    items_quantity_collection = db['items_quantity']
-
-    if request.method=="POST":
-        seller = request.form.get('seller')
-        item_ids = request.form.get('page_count')
-        item_ids = item_ids.split(", ")
-        print('First data')
-        print(item_ids)
-        #remove empty space in value
-        item_date = collection.find({'storeName': seller, "itemId": {"$in": item_ids}})
-        seller_date = a.collect_all_seller_data(seller, item_date, items_quantity_collection)
-        return json.dumps(seller_date)
 @app.route('/<name>')
 def name(name):
 
