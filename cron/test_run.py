@@ -24,4 +24,4 @@ print(response.headers)
 print(response.cookies)
 print(res.find("title"))
 
-print(res.content)
+print(response.content)
