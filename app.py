@@ -14,8 +14,7 @@ import lxml.html
 from datetime import *
 from multiprocessing import Pool,cpu_count
 import os
-
-from scipy.sparse import data
+ 
 
 app = Flask(__name__)
 SESSION_TYPE = "redis"
