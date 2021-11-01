@@ -26,7 +26,9 @@ print(res.find("title"))
 full_script_data = res.find_all("script")
 for full_script in full_script_data:
     try:
-        script = full_script.getText()
-        print(script[:500])
+        res = full_script.getText()
+        if res.find('dress')>0:
+            print("----- cript -----")
+            print(res)
     except:
         pass
