@@ -1,0 +1,3 @@
+lxml==4.6.3
+woocommerce
+googletrans==3.0.0
