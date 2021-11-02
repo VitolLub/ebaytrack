@@ -16,3 +16,4 @@ requests==2.25.1
 python-dateutil==2.8.1
 beautifulsoup4==4.10.0
 googletrans==3.0.0
+WooCommerce==3.0.0
