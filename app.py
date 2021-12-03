@@ -212,7 +212,7 @@ class Logic:
                 'sortOrder': 'PricePlusShippingLowest'
             })
             dictstr = api.response_dict()
-            print(dictstr)
+            #print(dictstr)
             try:
                 for i in range(0, len(dictstr.get('searchResult').get('item'))):
                     #check if same itemId isset in array.
@@ -258,6 +258,7 @@ class Logic:
 
         collection = db['items_quantity']
         #get parsed selling quantity
+        print("get parsed selling quantity")
         arr_quntiry = self.get_parsed_qt(doc)
 
         arr = self.get_parsed_date(doc)
@@ -306,7 +307,7 @@ class Logic:
             ack = dictstr.get('ack')
             totalPages = dictstr.get('paginationOutput').get('totalPages')
             # totalEntries = dictstr.get('paginationOutput').get('totalEntries')
-            print(totalPages)
+            #print(totalPages)
             if ack=="Success":
                 print(f'totalPages {totalPages}')
                 item_id_list = self.collect_all_pages(totalPages, seller)
@@ -432,26 +433,13 @@ def downloadFile():
     path = "C:\ebaytrack\GFG.csv"
     return send_file(path, as_attachment=True)
 
-@app.route('/bar')
-def bar():
-    a = Logic(db)
-    seller = 'roughriders12'
-    items_quantity_collection = db['items_quantity']
-    collection = db['items_data']
-    item_date = collection.find({'storeName': seller})
-    data_res = a.collect_all_seller_data(seller, item_date, items_quantity_collection)
-    print(data_res)
-    return render_template('bar.html', data_res=data_res)
+
 
 @app.route('/',methods=['GET','POST'])
 def index(seller=None):
     if request.method=='POST':
 
-        seller = request.form['seller']
-        # session['session_check_status'] = '0'
-        # session['seller_name'] = 'redstarus'
-        # session['seller_page_count'] = 10
-        #marcetplace = request.form['marcetplace']
+        seller = request.form['seller'] 
         a = Logic(db)
         #check if seller available i database
         seller_available = a.check_seler_available(seller)
@@ -476,56 +464,65 @@ def index(seller=None):
         # if selelr available in local database
         if seller_available==True:
             data_res = a.get_all_datas_by_seller_name(seller)
-            print(f'item_id_array {data_res}')
+            #print(f'item_id_array {data_res}')
             return render_template('index.html', data_res=data_res,seller_name_str=seller, seller_name='')
     else:
         return render_template('index.html', seller=seller)
-def collect_all_seller_data(seller,item_date,items_quantity_collection):
-    all_date = {}
-    item_arr = []
-    for s in item_date:  #
-        item_res = {}
-        item_res['itemId'] = s.get('itemId')
-        item_res['title'] = s.get('title')
-        item_res['globalId'] = s.get('globalId')
-        item_res['galleryURL'] = s.get('galleryURL')
-        item_res['viewItemURL'] = s.get('viewItemURL')
-        item_res['storeName'] = s.get('storeName')
-        item_res['storeURL'] = s.get('storeURL')
-        item_res['_currencyId'] = s.get('_currencyId')
-        item_res['value'] = s.get('value')
-        item_res['active'] = s.get('active')
-        # print(item_res)
-        res_qt = items_quantity_collection.find({'storeName': seller, 'itemId': s.get('itemId')})
-        qt_arr = []
-        all_date = []
-        all_qt = []
-        qt_res = {}
-        for a in res_qt:
-            all_date.append(a.get('date'))
-            all_qt.append(a.get('quantity'))
-        qt_res['date'] = all_date
-        qt_res['quantity'] = all_qt
-        a = Logic()
-        qt_res['qt_30'] = a.get_selling_qt_day_by_day(seller, s.get('itemId'), 30)
-        qt_res['qr_7'] = a.get_selling_qt_day_by_day(seller, s.get('itemId'), 7)
-        qt_arr.append(qt_res)
-        item_res['qt_res'] = qt_arr
-        item_arr.append(item_res)
-    return item_arr
+
+
 def save_item_quantity(item_id_list,seller,proxy):
     print(item_id_list)
     url = "https://www.ebay.com/bin/purchaseHistory?item=" + item_id_list
     ip_addresses = proxy
     proxy_index = random.randint(0, len(ip_addresses) - 1)
     proxy = {"http": ip_addresses[proxy_index]}
-    r = requests.get(url, proxies=proxy)
+
+
+    session = requests.Session()
+    session.cookies.set('Host', 'ebay.com', domain='.ebay.com', path='/')
+    session.cookies.set('region', 'US', domain='.ebay.com', path='/')
+    session.trust_env = False
+    cookies = {'__gads': 'ID=da5d4f1570f068f6:T=1635764052:S=ALNI_MZwUAUC1QyiuWjdRbaOoQDWVElK9w',
+               '_ssds': '2',
+               '__ssuzjsr2': 'a9be0cd8e',
+               '__uzma': 'e40aae7b-31a6-4f34-b72e-e24bfb9b9d65',
+               '__uzmaj2': '370517f0-91f0-4159-b4b5-f651ecbb14b0',
+               '__uzmb': '1635764004',
+               '__uzmbj2': '1635764006',
+               '__uzmc': '1687220296796',
+               '__uzmcj2': '2493511865733',
+               '__uzmd': '1638463023',
+               '__uzmdj2': '1638463025',
+               '__uzme': '7665',
+               '__uzmf': '7f30008d06bd68-42ca-47bc-b4e8-84c4f0794d070e3c437cbe7c2b78202',
+               'ak_bmsc': '304B903C0107B2FE2145BCBE1C9B6474~000000000000000000000000000000~YAAQlKwQArQy53B9AQAAaAH4ew3WDoPqXf+JK+v/WIvyEcd3l8cltIQ8VEQf8MNXr9FbGYK9yKWKMWxur3WxI7eFVOas4sgrlxSZxTmDjLJar8dOQ/rmEnHKDSuMTnT3qsGTRhw28o706WDW3fL+/FHQBGdd/cNnDyCNdHACBArXgLgfV3p5lfR27xowA/bn8R9yxAftKyWkfLQAMLL9NC33teUHcJQqr/dEnMUVbIKFja+vowur7InWz3SfPRSFLCkKT58xH0j7JBhgl5y7rDcBHC5LQosxDYzj5YQKxiKD3JKthYG3v66+ld6GP5QxTvK3zM0qxl7kM5fYxJL2FMR0jjilBMN9Cl+1PBVzbe9YuPawEISQXbOR8VplTecdG7JvLVKyGab4',
+               'bm_sv': '6FE95053EE6E16CFF6148776EA285B6E~FVADS8sa/UEahNsjD2G5vuk29RdXJI7RD+DWWbRCWNJQI3N7XZ///kiqPwQ0zTckXJQAZqr0BRPqxPZnQqnV0VdGurDoMVJ9FGWWmhC712Um5UcQBPSoUgMcPE4y2PUj0E2GkAoQ8raM/5e8rrI4bv95Jj0OI4XOqBMw2XwtBfY=',
+               'cid': 'Jsl3DFbotEHOAzN9%23428046651',
+               'dp1': 'bu1p/dml0b2xsdWJvbWly656b6382^kms/in656b6382^pbf/%2300008000e00000818002000000638a3002^u1f/Lubomyr656b6382^tzo/1a461a90443^expt/0001635764019928627060f4^bl/US656b6382^',
+               'ds1': 'ats/1638462468823',
+               'ebay': '%5Ejs%3D1%5EsfLMD%3D0%5Esin%3Din%5Esbf%3D%23000004%5E',
+               'nonsession': 'BAQAAAXw0ACieAAaAAAQADGOKJ4R2aXRvbGx1Ym9taXIACAAcYdCJgjE2Mzg0NjI0MzJ4MjY0OTkxNjIzNTYzeDB4Mk4AEAAMY4owAnZpdG9sbHVib21pcgAzAA5jijACMDcwMDItNDAwMixVU0EAQAAMY4owAnZpdG9sbHVib21pcgCaAA1hq5cEdml0b2xsdWJvbWlyZwCcADhjijACblkrc0haMlByQm1kajZ3Vm5ZK3NFWjJQckEyZGo2QUNrNEtpQ0ppSG9nMmRqNng5blkrc2VRPT0AnQAIY4owAjAwMDAwMDAwAMoAIGVrY4JkYjIxYmQwODE3YzBhYjk3ZDFiY2E0NmFmZmFkYzJmMQDLAAJhqQOKNjkBZAAHZWtjgiMwMDAwMGGzvkU2YoLZ2GDH5RGe22eyp1EjEQ**',
+               'npii': 'btguid/db21bd0817c0ab97d1bca46affadc2f1656b6382^cguid/db21c19717c0a0a66e40e472fd14912e656b6382^',
+               'ns1': 'BAQAAAXw0ACieAAaAAKUADWOKMAIxNjMwMzA4NTMxLzA7/QCnmmc7p4hnsZuKobl+0vqXLl8*',
+               's': 'BAQAAAXw0ACieAAWAAAEADGGqRYR2aXRvbGx1Ym9taXIAAwABYapHszAADAAKYapHszE2MzAzMDg1MzEAPQAMYapHs3ZpdG9sbHVib21pcgCoAAFhqkWEMQDuAClhqkezMTQGaHR0cHM6Ly93d3cuZWJheS5jb20vdXNyL3ZpdG9sbHVib21pcgcA+AAgYapHs2RiMjFiZDA4MTdjMGFiOTdkMWJjYTQ2YWZmYWRjMmYxAUUACGOKMAI2MTYzM2Q4MwFlAANhqkezIzAy9Sp8/fKDbw+kdE/ei6swCIp5eOI*',
+               'shs': 'BAQAAAX1o/biYAAaAAVUAD2OKJ4QyMDkxODQ4NDQxMDAyLDIiSRC1+F3gBUb56xEgqKrGTaZgwQ**',
+               'sru': 'X',
+               'JSESSIONID': 'B4894DD5EEBFE618BF21F20600BB9DC5'
+               }
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.97 Safari/537.36",
+        "Accept-Language": "en-US,en;q=0.5",
+        'referer': 'https://www.google.com/'
+    }
+    r = session.get(url, timeout=20, headers=headers, cookies=cookies, proxies=proxy)
+
+
+
+
     print(f'get quantity satus code {r.status_code}')
-    text = r.content
     print(f'get quantity satus code {r.status_code}')
     print(item_id_list)
     doc = lxml.html.fromstring(r.content)
-
     collection = db['items_quantity']
     #get parsed selling quantity
     a = Logic(db)
@@ -533,7 +530,7 @@ def save_item_quantity(item_id_list,seller,proxy):
     arr_quntiry = a.get_parsed_qt(doc)
 
     arr = a.get_parsed_date(doc)
-    print(item_id_list)
+    #print(item_id_list)
     print('arr_quntiry + arr')
     print(arr)
     print(len(arr))

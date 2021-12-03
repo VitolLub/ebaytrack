@@ -22,7 +22,7 @@ class ParsingData:
         country_list = ['US','JP','GB','FR','IN','NL','RU','UA']
         random_country = random.randint(0, len(country_list)-1)
         print(country_list[random_country])
-        handler = urlopen(f'https://api.proxycrawl.com/?token=y8HmZ4hAheixlyoTvhN9Iw&country={country_list[random_country]}&url={url}').read()
+        handler = urlopen(f'https://api.proxycrawl.com/?token=4vWmPOxIJWxNVcloGCfVvg&country={country_list[random_country]}&url={url}').read()
         handler = str(handler, 'utf-8')
         print(handler)
         print(type(handler))
