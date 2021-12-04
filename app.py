@@ -424,6 +424,42 @@ class Logic:
         data_res = self.collect_all_seller_data(seller, item_date, items_quantity_collection)
         return data_res
 
+    # function to get all items UPC
+    def get_all_items_upc(self,item_id):
+        headers = {
+            'Authorization': "Bearer v^1.1#i^1#r^0#I^3#p^1#f^0#t^H4sIAAAAAAAAAOVYbWwURRjutddC+VYRKkg8toABsnezu3fH3cJdOLjWnlx7LXcUi0jZj9nrcnu7y84c7Zkg5X6UGDTGKMSA2IamMX7wQ8UQMYDGLxKDYvwAQvyBGtSQ+Muo0Rjd3SvlWgkgvcQm3p/LvPPOO8/zzPvOzA7orald1tfU9+t0x6TKgV7QW+lwUFNBbU318hlVlfOqK0CJg2Ogd1Gvs1D1wyrEZRWdXQ+RrqkIunqyiopY2xgicobKahySEatyWYhYLLDJSHOcpd2A1Q0Na4KmEK5YNEQEKb8XBmjIgBUS74fAtKpXY6a0EGEaOcnPQS4YhAFG8Jv9COVgTEWYU3GIoAFNkRRNAiZFMawXsEzQTfnAJsLVDg0ka6rp4gZE2IbL2mONEqw3hsohBA1sBiHCsUhjMhGJRRtaUqs8JbHCwzokMYdzaHRrrSZCVzun5OCNp0G2N5vMCQJEiPCEizOMDspGroK5Dfi21AzwUYyfEaQAw3sZmiuLlI2akeXwjXFYFlkkJduVhSqWcf5mippq8NuggIdbLWaIWNRl/bXlOEWWZGiEiIY1kY5IaysRjud4LSsb7aQId/AcxgrZuj5KBnngC5iceTJICTQFID88UTHasMxjZlqrqaJsiYZcLRpeA03UcKw2TIk2plNCTRgRCVuISv18VzX0+jZZi1pcxRzuUq11hVlTCJfdvPkKjIzG2JD5HIYjEcZ22BKFCE7XZZEY22nn4nD69KAQ0YWxzno83d3d7m7GrRlpDw0A5XmoOZ4UumDWzJCerFXrRX/55gNI2aYiQHMkklmc100sPWaumgDUNBGmg2YOrhjWfTSs8FjrPwwlnD2jK6JcFSJAhgsEJHEF7feLAb4sm014OEk9Fg7Ic3kyyxkZiHWFEyApmHmWy0JDFlnGJ9FMQIKk6A9KpDcoSSTvE/0kJUEIIOR5IRj4PxXKraZ6EgoGxGXJ9bLleVrUkDeTXp/JbngwHlzekEgGlOZ010bY0pbsSMI2wHd4dDWf0mFb6Far4brk1yqyqUzKnL8cAli1Xj4RmjSEoTgueklB02GrpshCfmItMGOIrZyB80moKKZhXCQjuh4rz15dNnr/cpu4Pd7lO6P+o/PpuqyQlbITi5U1HpkBOF12WyeQW9CyHqvWNc68fljmThv1uHjL5s11QrE2SRbZymLxyum26brRDsFtQKTlDPO27U5YN7CUloGqeZ5hQ1MUaLRT467nbDaHOV6BE62wy5DgMjfBDlvKzwR8TCDABMfFS7CP0s6JtiWVYyt2PnCb12rP6I/8cIX9owqON0HB8VqlwwE8YDFVDxbWVG1wVk2bh2QM3TInuZGcVs1vVwO6MzCvc7JRWePonnt86ETJs8LAI6Bu5GGhtoqaWvLKAO691lNNzZw7naYoGjAU4wVMcBOov9brpOY4Z3ef3XYos/3KzLbBw0dkeHJwyqlEBkwfcXI4qiucBUfFXT8ONnx4FCiF/C+5d3K/n8Gn4rPPMUNPb+xbOLh53YL5u860Fk6cP/vZue9qvmRf+H7r7suXVn+627l98sunu5Yf+WMgUhe8eLCWOv95Ysp+b7zp6J17r5z7+tuWnavv54+tO7A4Omff60tXDn3T4n/8xT3J559lZyxa+JS8J32ysOSxAx8s2d90LDzr4XvilxruqG/eN39dtO7ItOThJc+ln/ziUv9vnYktjYfa6Lee6Dndsbn/4IXtKMVFooXKoY97hrZe+OqNPzvffuWjScaWvq2Tf4ou+HnmSzvf3Rsr3DdtcT4w6/LxGv+y/N3U5L1LL0pN721b6eifGqrr/+v9+k9OPfPolV0GePUw6Ggki8v3N5XeKbTwEQAA",
+            'Content-Type': "application/json",
+            'X-EBAY-C-MARKETPLACE-ID': "EBAY_US",
+            'X-EBAY-C-ENDUSERCTX': "contextualLocation=country=<2_character_country_code>,zip=<zip_code>,affiliateCampaignId=<ePNCampaignId>"
+        }
+
+        url = f"https://api.ebay.com/buy/browse/v1/item/v1|{item_id}|0?fieldgroups=PRODUCT"
+        content = requests.get(url, headers=headers)
+        print(content.status_code)
+        # print(content.content)
+
+        # content to json convert
+        res = json.loads(content.content)
+        categoryId = res['categoryId']
+        categoryPath =  res['categoryPath']
+        mi = res['localizedAspects']
+        upcmpn_arr = []
+        for upc in mi:
+            if upc['name'] == 'MPN' or upc['name'] == 'UPC':
+                upcmpn_arr.append(upc['value'])
+
+        self.save_upc_in_db(categoryId,categoryPath,upcmpn_arr,item_id)
+
+    def save_upc_in_db(self, categoryId, categoryPath, upcmpn_arr,item_id):
+        # save data in db
+        # items_data collection by item_id
+        collection = db['items_data']
+        collection.update_one()
+
+
+
+
+
 
 
 
@@ -439,7 +475,7 @@ def downloadFile():
 def index(seller=None):
     if request.method=='POST':
 
-        seller = request.form['seller'] 
+        seller = request.form['seller']
         a = Logic(db)
         #check if seller available i database
         seller_available = a.check_seler_available(seller)
